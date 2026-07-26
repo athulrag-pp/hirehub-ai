@@ -1,120 +1,199 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Employer Dashboard | HireHub AI</title>
+    <title>Employer Dashboard - HireHub AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { background-color: #f8f9fa; }
+        .stat-card { border: none; border-radius: 12px; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-icon { font-size: 2.2rem; }
+        .table-card { border: none; border-radius: 12px; }
+        footer { background-color: #212529; color: #adb5bd; }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-briefcase-fill text-primary me-1"></i>HireHub AI</a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="/jobs">Browse Jobs</a>
-            <a class="nav-link" href="/profile">Profile</a>
-            <form th:action="@{/logout}" method="post" class="d-inline ms-2">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
-            </form>
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-briefcase-fill text-primary me-2"></i>HireHub AI</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="/jobs"><i class="bi bi-search me-1"></i>Browse Jobs</a></li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i><span th:text="${user.fullName}">Employer</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><hr class="dropdown-divider"/></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </div>
     </div>
 </nav>
 
-<div class="container py-5">
+<!-- Alerts -->
+<div class="container mt-3">
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
-        <i class="bi bi-check-circle me-2"></i><span th:text="${success}"></span>
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+</div>
 
+<!-- Header -->
+<div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">Welcome, <span th:text="${user.fullName}"></span></h2>
-            <p class="text-muted mb-0" th:text="${user.companyName ?: 'Employer Dashboard'}"></p>
+            <h2 class="fw-bold mb-1">Employer Dashboard</h2>
+            <p class="text-muted mb-0">Welcome back, <span th:text="${user.fullName}">Employer</span>! Manage your job listings and applications.</p>
         </div>
-        <a href="/employer/jobs/new" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Post a Job
+        <a href="/employer/jobs/new" class="btn btn-primary btn-lg shadow-sm">
+            <i class="bi bi-plus-lg me-1"></i>Post a New Job
         </a>
     </div>
 
     <!-- Stats -->
-    <div class="row g-3 mb-5">
+    <div class="row g-4 mb-5">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-3 p-4 text-center">
-                <i class="bi bi-briefcase display-5 text-primary mb-2"></i>
-                <h3 class="fw-bold" th:text="${myJobs.size()}">0</h3>
-                <p class="text-muted mb-0">Total Postings</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-3 p-4 text-center">
-                <i class="bi bi-eye display-5 text-success mb-2"></i>
-                <h3 class="fw-bold" th:text="${myJobs.stream().filter(j -> j.active).count()}">0</h3>
-                <p class="text-muted mb-0">Active Listings</p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-3 p-4 text-center">
-                <i class="bi bi-eye-slash display-5 text-warning mb-2"></i>
-                <h3 class="fw-bold" th:text="${myJobs.stream().filter(j -> !j.active).count()}">0</h3>
-                <p class="text-muted mb-0">Inactive Listings</p>
-            </div>
-        </div>
-    </div>
-
-    <h4 class="fw-bold mb-3">My Job Postings</h4>
-
-    <div th:if="${myJobs.isEmpty()}" class="text-center py-5 text-muted">
-        <i class="bi bi-inbox display-3"></i>
-        <p class="mt-3">No job postings yet. <a href="/employer/jobs/new">Post your first job!</a></p>
-    </div>
-
-    <div th:if="${!myJobs.isEmpty()}" class="row g-3">
-        <div class="col-12" th:each="job : ${myJobs}">
-            <div class="card border-0 shadow-sm rounded-3 p-3">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h5 class="fw-bold mb-1" th:text="${job.title}"></h5>
-                        <p class="text-muted mb-0">
-                            <i class="bi bi-geo-alt me-1"></i><span th:text="${job.location}"></span>
-                            <span class="ms-3"><i class="bi bi-clock me-1"></i><span th:text="${job.jobType ?: 'N/A'}"></span></span>
-                        </p>
+            <div class="card stat-card shadow-sm p-3 bg-white">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-primary-subtle text-primary rounded-3 me-3">
+                        <i class="bi bi-file-earmark-text stat-icon"></i>
                     </div>
-                    <div class="col-md-2 text-center">
-                        <span th:if="${job.active}" class="badge bg-success rounded-pill">Active</span>
-                        <span th:unless="${job.active}" class="badge bg-secondary rounded-pill">Inactive</span>
-                        <br/>
-                        <small class="text-muted" th:text="${#temporals.format(job.postedAt, 'MMM d, yyyy')}"></small>
+                    <div>
+                        <small class="text-muted fw-bold">TOTAL POSTS</small>
+                        <h3 class="fw-bold mb-0" th:text="${myJobs != null ? myJobs.size() : 0}">0</h3>
                     </div>
-                    <div class="col-md-4 text-end d-flex gap-2 justify-content-end flex-wrap">
-                        <a th:href="@{/employer/jobs/{id}/applications(id=${job.id})}"
-                           class="btn btn-outline-info btn-sm">
-                            <i class="bi bi-people me-1"></i>Applications
-                        </a>
-                        <a th:href="@{/employer/jobs/{id}/edit(id=${job.id})}"
-                           class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-pencil me-1"></i>Edit
-                        </a>
-                        <form th:action="@{/employer/jobs/{id}/toggle(id=${job.id})}" method="post" class="d-inline">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                            <button type="submit" class="btn btn-outline-warning btn-sm"
-                                    th:text="${job.active} ? 'Deactivate' : 'Activate'"></button>
-                        </form>
-                        <form th:action="@{/employer/jobs/{id}/delete(id=${job.id})}" method="post" class="d-inline"
-                              onsubmit="return confirm('Delete this job posting?')">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card shadow-sm p-3 bg-white">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-success-subtle text-success rounded-3 me-3">
+                        <i class="bi bi-check-circle stat-icon"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted fw-bold">ACTIVE LISTINGS</small>
+                        <h3 class="fw-bold mb-0" th:text="${myJobs != null ? myJobs.stream().filter(j -> j.active).count() : 0}">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card shadow-sm p-3 bg-white">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-info-subtle text-info rounded-3 me-3">
+                        <i class="bi bi-building stat-icon"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted fw-bold">COMPANY</small>
+                        <h5 class="fw-bold mb-0 text-truncate" th:text="${user.companyName ?: 'Not Specified'}">Company</h5>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Jobs Table -->
+    <div class="card table-card shadow-sm">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-list-task me-2 text-primary"></i>Your Job Postings</h5>
+            <span class="badge bg-secondary" th:text="${myJobs != null ? myJobs.size() + ' jobs' : '0 jobs'}">0 jobs</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" th:if="${myJobs != null and !myJobs.isEmpty()}">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Job Title</th>
+                            <th>Location</th>
+                            <th>Type</th>
+                            <th>Posted Date</th>
+                            <th>Status</th>
+                            <th>Applications</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="job : ${myJobs}">
+                            <td class="ps-4">
+                                <a th:href="@{/jobs/{id}(id=${job.id})}" class="fw-bold text-decoration-none text-dark" th:text="${job.title}">Job Title</a>
+                                <div class="small text-muted" th:text="${job.company}">Company</div>
+                            </td>
+                            <td th:text="${job.location}">Location</td>
+                            <td><span class="badge bg-secondary-subtle text-dark" th:text="${job.jobType ?: 'Full-time'}">Full-time</span></td>
+                            <td th:text="${#temporals.format(job.postedAt, 'MMM d, yyyy')}">Date</td>
+                            <td>
+                                <span th:if="${job.active}" class="badge bg-success">Active</span>
+                                <span th:unless="${job.active}" class="badge bg-secondary">Closed</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/employer/jobs/{id}/applications(id=${job.id})}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-people me-1"></i>View (<span th:text="${job.applications != null ? job.applications.size() : 0}">0</span>)
+                                </a>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a th:href="@{/employer/jobs/{id}/edit(id=${job.id})}" class="btn btn-outline-primary" title="Edit Job">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form th:action="@{/employer/jobs/{id}/toggle(id=${job.id})}" method="post" class="d-inline">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-outline-warning" th:title="${job.active ? 'Close Listing' : 'Activate Listing'}">
+                                            <i class="bi" th:classappend="${job.active ? 'bi-pause-circle' : 'bi-play-circle'}"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/employer/jobs/{id}/delete(id=${job.id})}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this job posting?');">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="btn btn-outline-danger" title="Delete Job">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div th:if="${myJobs == null or myJobs.isEmpty()}" class="text-center py-5 text-muted">
+                <i class="bi bi-folder-plus display-4 mb-3 d-block text-secondary"></i>
+                <h5>No job postings created yet.</h5>
+                <p>Post your first job listing to start receiving candidate applications!</p>
+                <a href="/employer/jobs/new" class="btn btn-primary mt-2"><i class="bi bi-plus-lg me-1"></i>Post a Job</a>
+            </div>
+        </div>
+    </div>
 </div>
+
+<footer class="mt-5 py-4">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2025 HireHub AI. All rights reserved.</p>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

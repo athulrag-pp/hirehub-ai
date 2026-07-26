@@ -3,18 +3,21 @@ spring:
     name: hirehub-ai
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/hirehub?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:Athul2006}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:${DB_URL:jdbc:h2:mem:hirehubdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL}}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USERNAME:sa}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.h2.Driver}
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+    defer-datasource-initialization: true
 
   thymeleaf:
     cache: false
@@ -25,3 +28,4 @@ server:
 logging:
   level:
     com.hirehub: INFO
+

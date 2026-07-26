@@ -48,6 +48,15 @@ public class HomeController {
     public String profile(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         User user = userService.findByEmail(userDetails.getUsername());
         model.addAttribute("user", user);
+        if (!model.containsAttribute("profileDto")) {
+            ProfileDto profileDto = new ProfileDto();
+            profileDto.setFullName(user.getFullName());
+            profileDto.setPhone(user.getPhone());
+            profileDto.setCompanyName(user.getCompanyName());
+            profileDto.setResumeUrl(user.getResumeUrl());
+            profileDto.setBio(user.getBio());
+            model.addAttribute("profileDto", profileDto);
+        }
         return "profile";
     }
 

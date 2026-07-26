@@ -1,75 +1,107 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:text="'Apply for ' + ${job.title} + ' | HireHub AI'">Apply | HireHub AI</title>
+    <title th:text="${'Apply for ' + job.title}">Apply for Job - HireHub AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+    <style>
+        body { background-color: #f8f9fa; }
+        .apply-card { border: none; border-radius: 12px; }
+        footer { background-color: #212529; color: #adb5bd; }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-briefcase-fill text-primary me-1"></i>HireHub AI</a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="/dashboard">Dashboard</a>
+        <a class="navbar-brand fw-bold" href="/"><i class="bi bi-briefcase-fill text-primary me-2"></i>HireHub AI</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="/jobs"><i class="bi bi-search me-1"></i>Browse Jobs</a></li>
+            </ul>
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-1"></i><span sec:authentication="name">User</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><hr class="dropdown-divider"/></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
         </div>
     </div>
 </nav>
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-7">
-
-            <!-- Job summary -->
-            <div class="card border-0 shadow-sm rounded-3 p-4 mb-4 bg-primary text-white">
-                <h4 class="fw-bold mb-1" th:text="${job.title}"></h4>
-                <p class="mb-0 opacity-75">
-                    <i class="bi bi-building me-1"></i><span th:text="${job.company}"></span>
-                    <span class="mx-2">·</span>
-                    <i class="bi bi-geo-alt me-1"></i><span th:text="${job.location}"></span>
-                </p>
+        <div class="col-lg-8">
+            <!-- Job Summary Card -->
+            <div class="card shadow-sm border-0 rounded-3 p-4 mb-4 bg-white">
+                <span class="badge bg-primary-subtle text-primary mb-2 w-auto align-self-start" th:text="${job.jobType ?: 'Full-time'}">Full-time</span>
+                <h3 class="fw-bold mb-1" th:text="${job.title}">Job Title</h3>
+                <p class="text-muted mb-0"><i class="bi bi-building me-1"></i><span th:text="${job.company}">Company</span> &bull; <i class="bi bi-geo-alt me-1"></i><span th:text="${job.location}">Location</span></p>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-3 p-4">
-                <h5 class="fw-bold mb-4">Your Application</h5>
+            <!-- Application Form -->
+            <div class="card apply-card shadow-sm p-4 bg-white">
+                <h4 class="fw-bold mb-3"><i class="bi bi-send me-2 text-primary"></i>Submit Your Application</h4>
+                <p class="text-muted mb-4">Review your details below and include a cover letter to stand out.</p>
 
-                <form th:action="@{/applications/apply/{id}(id=${job.id})}"
-                      th:object="${appDto}" method="post">
+                <form th:action="@{/applications/apply/{jobId}(jobId=${job.id})}" th:object="${appDto}" method="post">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Applying as</label>
-                        <input type="text" class="form-control bg-light"
-                               th:value="${user.fullName} + ' (' + ${user.email} + ')'" disabled/>
+                        <label class="form-label fw-semibold">Applicant Name</label>
+                        <input type="text" class="form-control" th:value="${user.fullName}" readonly/>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Resume URL <span class="text-muted">(optional)</span></label>
-                        <input type="url" th:field="*{resumeUrl}" class="form-control"
-                               placeholder="https://linkedin.com/in/yourprofile or Google Drive link"
-                               th:value="${user.resumeUrl}"/>
-                        <div class="form-text">Link to your resume, LinkedIn, or portfolio.</div>
+                        <label class="form-label fw-semibold">Email Address</label>
+                        <input type="email" class="form-control" th:value="${user.email}" readonly/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="resumeUrl" class="form-label fw-semibold">Resume / Portfolio URL</label>
+                        <input type="url" class="form-control" id="resumeUrl" th:field="*{resumeUrl}" th:placeholder="${user.resumeUrl ?: 'https://drive.google.com/your-resume-link'}"/>
+                        <div class="form-text">Direct link to your resume or portfolio document (PDF/Word/LinkedIn).</div>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Cover Letter <span class="text-muted">(optional)</span></label>
-                        <textarea th:field="*{coverLetter}" class="form-control" rows="6"
-                                  placeholder="Introduce yourself and explain why you're a great fit for this role..."></textarea>
+                        <label for="coverLetter" class="form-label fw-semibold">Cover Letter / Note to Employer</label>
+                        <textarea class="form-control" id="coverLetter" th:field="*{coverLetter}" rows="6" placeholder="Introduce yourself, explain why you are a great fit for this position, and share relevant experience..." required></textarea>
                     </div>
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
-                            <i class="bi bi-send me-1"></i>Submit Application
-                        </button>
-                        <a th:href="@{/jobs/{id}(id=${job.id})}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a th:href="@{/jobs/{id}(id=${job.id})}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Cancel</a>
+                        <button type="submit" class="btn btn-primary btn-lg px-4"><i class="bi bi-send me-1"></i>Submit Application</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<footer class="mt-5 py-4">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2025 HireHub AI. All rights reserved.</p>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

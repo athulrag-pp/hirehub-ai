@@ -43,6 +43,7 @@ public class JobPosting {
 
     private String experienceLevel; // Entry, Mid, Senior
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 
