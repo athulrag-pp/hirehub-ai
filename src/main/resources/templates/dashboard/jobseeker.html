@@ -98,7 +98,7 @@
                     </div>
                     <div>
                         <small class="text-muted fw-bold">UNDER REVIEW</small>
-                        <h3 class="fw-bold mb-0" th:text="${myApplications != null ? myApplications.stream().filter(a -> a.status.name() == 'PENDING' or a.status.name() == 'REVIEWED').count() : 0}">0</h3>
+                        <h3 class="fw-bold mb-0" th:text="${underReviewCount ?: 0}">0</h3>
                     </div>
                 </div>
             </div>
@@ -111,7 +111,7 @@
                     </div>
                     <div>
                         <small class="text-muted fw-bold">SHORTLISTED / HIRED</small>
-                        <h3 class="fw-bold mb-0" th:text="${myApplications != null ? myApplications.stream().filter(a -> a.status.name() == 'SHORTLISTED' or a.status.name() == 'HIRED').count() : 0}">0</h3>
+                        <h3 class="fw-bold mb-0" th:text="${shortlistedCount ?: 0}">0</h3>
                     </div>
                 </div>
             </div>

@@ -98,7 +98,7 @@
                     </div>
                     <div>
                         <small class="text-muted fw-bold">ACTIVE LISTINGS</small>
-                        <h3 class="fw-bold mb-0" th:text="${myJobs != null ? myJobs.stream().filter(j -> j.active).count() : 0}">0</h3>
+                        <h3 class="fw-bold mb-0" th:text="${activeJobCount ?: 0}">0</h3>
                     </div>
                 </div>
             </div>

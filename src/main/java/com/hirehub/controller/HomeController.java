@@ -36,10 +36,16 @@ public class HomeController {
         model.addAttribute("user", user);
 
         if (user.getRole() == Role.ROLE_EMPLOYER) {
-            model.addAttribute("myJobs", jobPostingService.findByEmployer(user));
+            var jobs = jobPostingService.findByEmployer(user);
+            model.addAttribute("myJobs", jobs);
+            model.addAttribute("activeJobCount",  jobs.stream().filter(com.hirehub.entity.JobPosting::isActive).count());
+            model.addAttribute("inactiveJobCount", jobs.stream().filter(j -> !j.isActive()).count());
             return "dashboard/employer";
         } else {
-            model.addAttribute("myApplications", applicationService.findByApplicant(user));
+            var apps = applicationService.findByApplicant(user);
+            model.addAttribute("myApplications", apps);
+            model.addAttribute("underReviewCount",   apps.stream().filter(a -> a.getStatus().name().equals("PENDING") || a.getStatus().name().equals("REVIEWED")).count());
+            model.addAttribute("shortlistedCount",   apps.stream().filter(a -> a.getStatus().name().equals("SHORTLISTED") || a.getStatus().name().equals("HIRED")).count());
             return "dashboard/jobseeker";
         }
     }
